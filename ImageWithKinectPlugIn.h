@@ -53,7 +53,6 @@
 	uint16_t	_t_gamma[2048];
 	
 	bool	_useDepthTransform;
-	NSMutableDictionary*	_vertices;
 	
 	double _depthMin;
 	double _depthMax;
@@ -93,8 +92,6 @@ You can access their values in the appropriate plug-in methods using self.inputF
 
 @property(assign) id<QCPlugInOutputImageProvider>	outputImageRGB;
 @property(assign) id<QCPlugInOutputImageProvider>	outputImageDepth;
-
-@property(assign) NSDictionary*	outputVertices;
 
 @property(assign) double outputRelativeDepthMin;
 

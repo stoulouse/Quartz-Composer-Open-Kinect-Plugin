@@ -285,13 +285,13 @@
 							<key>PBXSmartGroupTreeModuleOutlineStateSelectionKey</key>
 							<array>
 								<array>
-									<integer>32</integer>
+									<integer>30</integer>
 									<integer>28</integer>
 									<integer>0</integer>
 								</array>
 							</array>
 							<key>PBXSmartGroupTreeModuleOutlineStateVisibleRectKey</key>
-							<string>{{0, 49}, {242, 668}}</string>
+							<string>{{0, 226}, {242, 668}}</string>
 						</dict>
 						<key>PBXTopSmartGroupGIDs</key>
 						<array/>
@@ -310,7 +310,7 @@
 							<real>242</real>
 						</array>
 						<key>RubberWindowFrame</key>
-						<string>11 143 1073 727 0 0 1440 878 </string>
+						<string>10 144 1073 727 0 0 1440 878 </string>
 					</dict>
 					<key>Module</key>
 					<string>PBXSmartGroupTreeModule</string>
@@ -328,7 +328,7 @@
 								<key>PBXProjectModuleGUID</key>
 								<string>1CE0B20306471E060097A5F4</string>
 								<key>PBXProjectModuleLabel</key>
-								<string>RGBOutputImageProvider.mm</string>
+								<string>ImageWithKinectPlugIn.mm</string>
 								<key>PBXSplitModuleInNavigatorKey</key>
 								<dict>
 									<key>Split0</key>
@@ -336,11 +336,11 @@
 										<key>PBXProjectModuleGUID</key>
 										<string>1CE0B20406471E060097A5F4</string>
 										<key>PBXProjectModuleLabel</key>
-										<string>RGBOutputImageProvider.mm</string>
+										<string>ImageWithKinectPlugIn.mm</string>
 										<key>_historyCapacity</key>
 										<integer>0</integer>
 										<key>bookmark</key>
-										<string>0180E2971362E90300B3F65E</string>
+										<string>0180E3231362F45C00B3F65E</string>
 										<key>history</key>
 										<array>
 											<string>01394606129F3C5D00A0E029</string>
@@ -363,10 +363,10 @@
 											<string>0180E2061362DF4400B3F65E</string>
 											<string>0180E23C1362E42200B3F65E</string>
 											<string>0180E24B1362E4B300B3F65E</string>
-											<string>0180E24C1362E4B300B3F65E</string>
-											<string>0180E2941362E90300B3F65E</string>
 											<string>0180E2951362E90300B3F65E</string>
-											<string>0180E2961362E90300B3F65E</string>
+											<string>0180E2A51362EC2900B3F65E</string>
+											<string>0180E3071362F3BB00B3F65E</string>
+											<string>0180E31A1362F44200B3F65E</string>
 										</array>
 									</dict>
 									<key>SplitCount</key>
@@ -380,7 +380,7 @@
 								<key>Frame</key>
 								<string>{{0, 0}, {809, 681}}</string>
 								<key>RubberWindowFrame</key>
-								<string>11 143 1073 727 0 0 1440 878 </string>
+								<string>10 144 1073 727 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>PBXNavigatorGroup</string>
@@ -400,7 +400,7 @@
 								<key>Frame</key>
 								<string>{{0, 686}, {809, 0}}</string>
 								<key>RubberWindowFrame</key>
-								<string>11 143 1073 727 0 0 1440 878 </string>
+								<string>10 144 1073 727 0 0 1440 878 </string>
 							</dict>
 							<key>Module</key>
 							<string>XCDetailModule</string>
@@ -572,7 +572,7 @@
 		<string>/Volumes/NewHope/Users/samlepirate/Dev/PirateAndCo/trunk/QuartzComposer/Plugins/ImageWithKinect/ImageWithKinect.xcodeproj</string>
 	</array>
 	<key>WindowString</key>
-	<string>11 143 1073 727 0 0 1440 878 </string>
+	<string>10 144 1073 727 0 0 1440 878 </string>
 	<key>WindowToolsV3</key>
 	<array>
 		<dict>

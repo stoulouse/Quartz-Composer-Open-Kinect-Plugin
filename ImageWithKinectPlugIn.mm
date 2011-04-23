@@ -27,7 +27,6 @@
 @dynamic outputAx, outputAy, outputAz;
 @dynamic outputDx, outputDy, outputDz;
 @dynamic outputImageRGB, outputImageDepth;
-@dynamic outputVertices;
 @dynamic outputRelativeDepthMin, outputDepthMin, outputDepthMax, outputDepthAvg;
 
 - (freenect_context*)context {
@@ -192,20 +191,7 @@
 			float v = i/2048.0f;
 			v = powf(v, 3)* 6;
 			_t_gamma[i] = v*6*256;
-		}
-		
-		_vertices = [[NSMutableDictionary alloc] initWithCapacity: 0];
-		
-		//		for (int i = 0; i < FREENECT_FRAME_H; ++i) {
-		//			for (int j = 0; j < FREENECT_FRAME_W; ++j) {
-		//				[_vertices setObject:[NSMutableArray arrayWithObjects: 
-		//									  [NSNumber numberWithInt:j],
-		//									  [NSNumber numberWithInt:i],
-		//									  [NSNumber numberWithFloat:0.0f],
-		//									  nil] 
-		//							  forKey:[NSNumber numberWithInt: j + i * (int)FREENECT_FRAME_W]];
-		//			}
-		//		}
+		}		
 	}
 	
 	return self;
@@ -229,7 +215,6 @@
 	pthread_mutex_destroy(&_depthbackbuf_mutex);
 	[_rgbImage release];
 	[_depthImage release];
-	[_vertices release];
 	
 	[super dealloc];
 }
@@ -242,7 +227,7 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp) {
 	NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
 	
 	ImageWithKinectPlugIn* plugin = (ImageWithKinectPlugIn*)fakenect_get_user(dev);
-	if (plugin) {
+	if (plugin && !plugin->_die) {
 		int i;
 		uint16_t* depth = (uint16_t*)v_depth;
 
@@ -334,7 +319,7 @@ void rgb_cb(freenect_device *dev, void *rgb, uint32_t timestamp) {
 	NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
 	
 	ImageWithKinectPlugIn* plugin = (ImageWithKinectPlugIn*)fakenect_get_user(dev);
-	if (plugin) {
+	if (plugin && !plugin->_die) {
 		pthread_mutex_lock(&plugin->_backbuf_mutex);
 		
 		// swap buffers
@@ -529,18 +514,6 @@ void* freenect_threadfunc(void *arg) {
 	
 	_useDepthTransform = self.inputUseDepthTransform;
 	
-	//	for (int i = 0; i < FREENECT_FRAME_H; ++i) {
-	//		for (int j = 0; j < FREENECT_FRAME_W; ++j) {
-	//			NSMutableArray* tmp = [_vertices objectForKey:[NSNumber numberWithInt: j + i * (int)FREENECT_FRAME_W]];
-	//			[tmp replaceObjectAtIndex:2 withObject:			
-	//			 [NSNumber numberWithFloat:
-	//			  (_depth_back[j * 3 + i * (int)FREENECT_FRAME_W * 3 + 0] +
-	//			   _depth_back[j * 3 + i * (int)FREENECT_FRAME_W * 3 + 1] +
-	//			   _depth_back[j * 3 + i * (int)FREENECT_FRAME_W * 3 + 2]) / 3.0f]];
-	//		}
-	//	}
-	self.outputVertices = _vertices;
-	
 	return YES;
 }
 
@@ -571,7 +544,6 @@ void* freenect_threadfunc(void *arg) {
 	free(_rgb_back);
 	free(_rgb_mid);
 	free(_rgb_front);
-	
 }
 
 @end
