@@ -1,0 +1,9 @@
+Quartz Composer Open Kinect Plugin
+
+features:
+- kinect and fakenect support
+- depth and rgb images
+- depth gamma transform
+- depth clamping
+- depth proximity
+- multiple device (guess so)
