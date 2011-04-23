@@ -183,7 +183,7 @@
 		 Allocate any permanent resource required by the plug-in.
 		 */
 		pthread_mutex_init(&_backbuf_mutex, 0);
-		pthread_cond_init(&_frame_cond, 0);
+		pthread_mutex_init(&_depthbackbuf_mutex, 0);
 		
 		_rgbImage = [[RGBOutputImageProvider alloc] initWithPlugin:self];	
 		_depthImage = [[DepthOutputImageProvider alloc] initWithPlugin:self];	
@@ -226,7 +226,7 @@
 	 Release any resources created in -init.
 	 */
 	pthread_mutex_destroy(&_backbuf_mutex);
-	pthread_cond_destroy(&_frame_cond);
+	pthread_mutex_destroy(&_depthbackbuf_mutex);
 	[_rgbImage release];
 	[_depthImage release];
 	[_vertices release];
@@ -250,48 +250,49 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp) {
 		double depthMax = DBL_MIN;
 		double depthAvg = 0.0;
 		
-		pthread_mutex_lock(&plugin->_backbuf_mutex);
+		pthread_mutex_lock(&plugin->_depthbackbuf_mutex);
 		for (i = 0; i < FREENECT_FRAME_PIX; ++i) {
 			if (plugin->_useDepthTransform) {
 				int pval = plugin->_t_gamma[depth[i]];			
 				pval = (pval <= plugin->_depthClampMax ? pval : plugin->_depthClampMax);
 				pval = (pval >= plugin->_depthClampMin ? pval - plugin->_depthClampMin : 0);
 				int lb = pval & 0xff;
+				plugin->_depth_mid[4*i+0] = 255;
 				switch (pval>>8) {
 					case 0:
-						plugin->_depth_mid[3*i+0] = 255;
-						plugin->_depth_mid[3*i+1] = 255-lb;
-						plugin->_depth_mid[3*i+2] = 255-lb;
+						plugin->_depth_mid[4*i+1] = 255;
+						plugin->_depth_mid[4*i+2] = 255-lb;
+						plugin->_depth_mid[4*i+3] = 255-lb;
 						break;
 					case 1:
-						plugin->_depth_mid[3*i+0] = 255;
-						plugin->_depth_mid[3*i+1] = lb;
-						plugin->_depth_mid[3*i+2] = 0;
+						plugin->_depth_mid[4*i+1] = 255;
+						plugin->_depth_mid[4*i+2] = lb;
+						plugin->_depth_mid[4*i+3] = 0;
 						break;
 					case 2:
-						plugin->_depth_mid[3*i+0] = 255-lb;
-						plugin->_depth_mid[3*i+1] = 255;
-						plugin->_depth_mid[3*i+2] = 0;
+						plugin->_depth_mid[4*i+1] = 255-lb;
+						plugin->_depth_mid[4*i+2] = 255;
+						plugin->_depth_mid[4*i+3] = 0;
 						break;
 					case 3:
-						plugin->_depth_mid[3*i+0] = 0;
-						plugin->_depth_mid[3*i+1] = 255;
-						plugin->_depth_mid[3*i+2] = lb;
+						plugin->_depth_mid[4*i+1] = 0;
+						plugin->_depth_mid[4*i+2] = 255;
+						plugin->_depth_mid[4*i+3] = lb;
 						break;
 					case 4:
-						plugin->_depth_mid[3*i+0] = 0;
-						plugin->_depth_mid[3*i+1] = 255-lb;
-						plugin->_depth_mid[3*i+2] = 255;
+						plugin->_depth_mid[4*i+1] = 0;
+						plugin->_depth_mid[4*i+2] = 255-lb;
+						plugin->_depth_mid[4*i+3] = 255;
 						break;
 					case 5:
-						plugin->_depth_mid[3*i+0] = 0;
-						plugin->_depth_mid[3*i+1] = 0;
-						plugin->_depth_mid[3*i+2] = 255-lb;
+						plugin->_depth_mid[4*i+1] = 0;
+						plugin->_depth_mid[4*i+2] = 0;
+						plugin->_depth_mid[4*i+3] = 255-lb;
 						break;
 					default:
-						plugin->_depth_mid[3*i+0] = 0;
-						plugin->_depth_mid[3*i+1] = 0;
-						plugin->_depth_mid[3*i+2] = 0;
+						plugin->_depth_mid[4*i+1] = 0;
+						plugin->_depth_mid[4*i+2] = 0;
+						plugin->_depth_mid[4*i+3] = 0;
 						break;
 				}
 			} else {				
@@ -300,9 +301,10 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp) {
 				pval = (pval >= plugin->_depthClampMin ? pval - plugin->_depthClampMin : 0);
 				int lb = 255.0 - (((double)pval) / 2048.0) * 255.0;
 //				int lb = pval & 0xff;
-				plugin->_depth_mid[3*i+0] = lb;
-				plugin->_depth_mid[3*i+1] = lb;
-				plugin->_depth_mid[3*i+2] = lb;
+				plugin->_depth_mid[4*i+0] = lb;
+				plugin->_depth_mid[4*i+1] = lb;
+				plugin->_depth_mid[4*i+2] = lb;
+				plugin->_depth_mid[4*i+3] = lb;
 			}
 			
 			{
@@ -322,8 +324,7 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp) {
 		plugin->_depthAvg = depthAvg / (depthMax * FREENECT_FRAME_PIX);
 		
 		plugin->_got_depth++;
-		pthread_cond_signal(&plugin->_frame_cond);
-		pthread_mutex_unlock(&plugin->_backbuf_mutex);
+		pthread_mutex_unlock(&plugin->_depthbackbuf_mutex);
 	}
 	
 	[pool release];
@@ -345,7 +346,6 @@ void rgb_cb(freenect_device *dev, void *rgb, uint32_t timestamp) {
 		
 		plugin->_got_rgb++;
 		
-		pthread_cond_signal(&plugin->_frame_cond);
 		pthread_mutex_unlock(&plugin->_backbuf_mutex);
 	}
 	
@@ -407,8 +407,8 @@ void* freenect_threadfunc(void *arg) {
 
 - (BOOL) startExecution:(id<QCPlugInContext>)context
 {
-	_depth_mid = (uint8_t*)malloc(640*480*3);
-	_depth_front = (uint8_t*)malloc(640*480*3);
+	_depth_mid = (uint8_t*)malloc(640*480*4);
+	_depth_front = (uint8_t*)malloc(640*480*4);
 	_rgb_back = (uint8_t*)malloc(640*480*3);
 	_rgb_mid = (uint8_t*)malloc(640*480*3);
 	_rgb_front = (uint8_t*)malloc(640*480*3);

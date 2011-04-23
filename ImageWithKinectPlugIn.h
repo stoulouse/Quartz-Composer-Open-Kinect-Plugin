@@ -32,6 +32,7 @@
 	int16_t _ax,_ay,_az;
 	double _dx,_dy,_dz;	
 	
+	pthread_mutex_t	_depthbackbuf_mutex;
 	pthread_mutex_t	_backbuf_mutex;
 	pthread_cond_t	_frame_cond;
 	

@@ -48,25 +48,17 @@
         withBytesPerRow:(NSUInteger)rowBytes
             pixelFormat:(NSString*)format
               forBounds:(NSRect)bounds {
+
+	if (pthread_mutex_trylock(&_plugin->_backbuf_mutex)) {
+		if (_plugin->_got_rgb) {
+			uint8_t* tmp = _plugin->_rgb_front;
+			_plugin->_rgb_front = _plugin->_rgb_mid;
+			_plugin->_rgb_mid = tmp;
+			_plugin->_got_rgb = 0;
+		}
 	
-	pthread_mutex_lock(&_plugin->_backbuf_mutex);
-	
-	while (!_plugin->_got_rgb) {
-//		
-		pthread_cond_wait(&_plugin->_frame_cond, &_plugin->_backbuf_mutex);
-//		pthread_mutex_unlock(&_plugin->_backbuf_mutex);
-//		return NO;
+		pthread_mutex_unlock(&_plugin->_backbuf_mutex);
 	}
-	
-	uint8_t *tmp;
-	if (_plugin->_got_rgb) {
-		tmp = _plugin->_rgb_front;
-		_plugin->_rgb_front = _plugin->_rgb_mid;
-		_plugin->_rgb_mid = tmp;
-		_plugin->_got_rgb = 0;
-	}
-	
-	pthread_mutex_unlock(&_plugin->_backbuf_mutex);
 	
 	if (format == QCPlugInPixelFormatARGB8) {
 		uint8_t* buf = (uint8_t*)baseAddress;
