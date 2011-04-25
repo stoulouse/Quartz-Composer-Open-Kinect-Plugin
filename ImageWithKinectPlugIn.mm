@@ -28,6 +28,7 @@
 @dynamic outputDx, outputDy, outputDz;
 @dynamic outputImageRGB, outputImageDepth;
 @dynamic outputRelativeDepthMin, outputDepthMin, outputDepthMax, outputDepthAvg;
+@dynamic outputNearestDepthX, outputNearestDepthY, outputNearestDepthZ;
 
 - (freenect_context*)context {
 	return (_useFakenect ? _fake_ctx : _f_ctx);
@@ -150,6 +151,18 @@
 		return [NSDictionary dictionaryWithObjectsAndKeys:
 				@"Depth Average", QCPortAttributeNameKey, nil];
 	}
+	if ([key isEqualToString:@"outputNearestDepthX"]) {
+		return [NSDictionary dictionaryWithObjectsAndKeys:
+				@"Nearest Depth X", QCPortAttributeNameKey, nil];
+	}
+	if ([key isEqualToString:@"outputNearestDepthY"]) {
+		return [NSDictionary dictionaryWithObjectsAndKeys:
+				@"Nearest Depth Y", QCPortAttributeNameKey, nil];
+	}
+	if ([key isEqualToString:@"outputNearestDepthZ"]) {
+		return [NSDictionary dictionaryWithObjectsAndKeys:
+				@"Nearest Depth Z", QCPortAttributeNameKey, nil];
+	}
 	
 	return nil;
 }
@@ -191,7 +204,7 @@
 			float v = i/2048.0f;
 			v = powf(v, 3)* 6;
 			_t_gamma[i] = v*6*256;
-		}		
+		}
 	}
 	
 	return self;
@@ -234,6 +247,8 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp) {
 		double depthMin = DBL_MAX;
 		double depthMax = DBL_MIN;
 		double depthAvg = 0.0;
+		
+		double depthMinX = 0.0, depthMinY = 0.0;
 		
 		pthread_mutex_lock(&plugin->_depthbackbuf_mutex);
 		for (i = 0; i < FREENECT_FRAME_PIX; ++i) {
@@ -297,13 +312,21 @@ void depth_cb(freenect_device *dev, void *v_depth, uint32_t timestamp) {
 				pval = (pval <= plugin->_depthClampMax ? pval : plugin->_depthClampMax);
 				pval = (pval >= plugin->_depthClampMin ? pval - plugin->_depthClampMin : 0);
 			
-				depthMin = (pval < depthMin ? pval : depthMin);
+				if (pval < depthMin) {
+					depthMin = pval;
+					
+//					idx = j * 3 + i * (int)bounds.size.width * 3;
+					depthMinY = i / 640;
+					depthMinX = i - (depthMinY * 640);
+				}
 				depthMax = (pval > depthMax ? pval : depthMax);
 				
 				depthAvg += pval;
 			}
 		}
 
+		plugin->_depthNearestX = (double)depthMinX / 640.0f;
+		plugin->_depthNearestY = (double)depthMinY / 480.0f;
 		plugin->_depthMax = depthMax;
 		plugin->_depthMin = depthMin;
 		plugin->_depthAvg = depthAvg / (depthMax * FREENECT_FRAME_PIX);
@@ -503,8 +526,13 @@ void* freenect_threadfunc(void *arg) {
 	self.outputDy = _dy;
 	self.outputDz = _dz;
 	
-	if (_depthClampMax != _depthClampMin)
+	if (_depthClampMax != _depthClampMin) {
 		self.outputRelativeDepthMin = _depthMin / (_depthClampMax - _depthClampMin);
+		self.outputNearestDepthZ = _depthMin / (_depthClampMax - _depthClampMin);
+	}
+	self.outputNearestDepthX = _depthNearestX;
+	self.outputNearestDepthY = _depthNearestY;
+
 	self.outputDepthMax = _depthMax;
 	self.outputDepthMin = _depthMin;
 	self.outputDepthAvg = _depthAvg;

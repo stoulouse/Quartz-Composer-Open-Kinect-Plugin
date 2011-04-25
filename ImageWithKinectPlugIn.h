@@ -63,6 +63,10 @@
 	
 	BOOL	_useFakenect;
 	NSString*	_fakenectDataPath;
+	
+	double	_depthNearestX;
+	double	_depthNearestY;
+	double	_depthNearestZ;
 }
 
 /*
@@ -94,6 +98,10 @@ You can access their values in the appropriate plug-in methods using self.inputF
 @property(assign) id<QCPlugInOutputImageProvider>	outputImageDepth;
 
 @property(assign) double outputRelativeDepthMin;
+
+@property(assign) double outputNearestDepthX;
+@property(assign) double outputNearestDepthY;
+@property(assign) double outputNearestDepthZ;
 
 @property(assign) double outputDepthMin;
 @property(assign) double outputDepthMax;
